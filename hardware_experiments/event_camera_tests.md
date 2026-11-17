@@ -1,12 +1,13 @@
 # Event camera insect tracking tests (2026)
 
-Status: first draft built from the code and readme in the repo. The repo has setup notes, scripts and a plan, but no results. Items marked TODO need results, photos or context from whoever ran the tests.
+**Status:** In progress. This is the current main track. The repo has setup notes, scripts and a plan, but no results. Draft built from the code and readme, so items marked TODO need results, photos or context from whoever ran the tests.
+**Period:** April 2026 onwards
+**Source:** https://github.com/SPAIA/sensor_tests (private). One real commit, 26 Apr 2026, on `master`. The `main` branch only holds a `.gitignore`.
+**Related:** Follows [early_camera_experiments.md](early_camera_experiments.md) (ESP32-CAM brightness averaging, 2020), [max30102.md](max30102.md) (IR proximity trigger, 2021 to 2023), [ambassador_radar_and_pi_camera.md](ambassador_radar_and_pi_camera.md) (Raspberry Pi with radar, frame differencing and time-of-flight triggers, 2024 to 2025) and the [Fraunhofer IZM radar study](../radar-feasibility-2025/README.md) (2025). Camera measurements with Fraunhofer IZM with a Basler camera and the GenX320 ran in Feb and Mar 2026.
 
-Source: https://github.com/SPAIA/sensor_tests (private). One real commit, 26 Apr 2026, on `master`. The `main` branch only holds a `.gitignore`.
+---
 
-This is the newest experiment. It comes after [early_camera_experiments.md](early_camera_experiments.md) (ESP32-CAM brightness averaging, 2020), [max30102.md](max30102.md) (IR proximity trigger, 2021 to 2023) and [ambassador_radar_and_pi_camera.md](ambassador_radar_and_pi_camera.md) (Raspberry Pi with radar, frame differencing and time-of-flight triggers, 2024 to 2025).
-
-## 1. Summary
+## Summary
 
 - Goal. Detect and track small moving insects using an event camera, which reports per-pixel brightness changes instead of full frames.
 - Setup. A Raspberry Pi 5 with a Basler DART bcon MIPI camera that carries a Prophesee GenX320 event sensor and a Basler frame sensor.
@@ -14,14 +15,14 @@ This is the newest experiment. It comes after [early_camera_experiments.md](earl
 - Plan. Tune on ball bearings rolling in a tray, then move to live insects.
 - Outcome. TODO. The repo describes the plan and the known problems but not what the tests showed.
 
-## 2. Why an event camera
+## Why an event camera
 
 - It only outputs data where brightness changes. A still scene produces almost nothing, so data volume and processing load are small compared with full video. TODO confirm power draw, which we haven't measured.
 - Time resolution is in microseconds, which suits fast insects such as bees and fruit flies.
 - It looks like a fix for the 2020 camera problems. Detection works on motion at pixel level, so a small insect shouldn't be averaged away the way it was in a ring or a cell. The repo doesn't state this reasoning. TODO confirm it was the motivation.
-- It does not escape the shadow problem. See section 7.
+- It does not escape the shadow problem. See "Known issues from the readme".
 
-## 3. Hardware and software
+## Hardware and software
 
 - Raspberry Pi 5, reached remotely over Tailscale.
 - Basler DART bcon MIPI CEP. One module with two sensors.
@@ -33,9 +34,9 @@ This is the newest experiment. It comes after [early_camera_experiments.md](earl
 
 - The two sensors need different device tree overlays and can't run at the same time. Switching means editing `/boot/firmware/config.txt` and rebooting. For event mode the `dtoverlay=basler-camera` lines must be absent. `startup.sh` loads the event overlays and activates the Python environment each session.
 - Python with Flask, OpenCV and NumPy for the viewers and tracker.
-- Mount, lens and lighting. TODO (the repo only describes the intended tray setup, see section 5).
+- Mount, lens and lighting. TODO (the repo only describes the intended tray setup, see "Test plan").
 
-## 4. Tools in the repo
+## Tools in the repo
 
 | Script | Port | Purpose |
 |---|---|---|
@@ -44,10 +45,10 @@ This is the newest experiment. It comes after [early_camera_experiments.md](earl
 | `playback_server.py` | 5001 | Browse recordings and play them back at 1x to 50x speed. |
 | `trail_server.py` | 5002 | Playback with detection, tracking and coloured trails. |
 | `trail_live_server.py` | 5003 | The same detection and trails on the live camera. |
-| `basler.py` | none | Records high-speed video from a Basler frame camera. See section 6. |
-| `motion_glyphs.py` | none | Turns a video into images of motion trails. See section 6. |
+| `basler.py` | none | Records high-speed video from a Basler frame camera. See "Frame camera and glyph scripts". |
+| `motion_glyphs.py` | none | Turns a video into images of motion trails. See "Frame camera and glyph scripts". |
 
-## 5. Test plan
+## Test plan
 
 ### Phase 1, ball bearings
 
@@ -71,7 +72,7 @@ This is the newest experiment. It comes after [early_camera_experiments.md](earl
 
 - Arena. Enclosed, to stop escapes and limit depth. Matte white or light grey floor. No transparent walls, because reflections and refraction add false edges. Keep temperature in mind, since cold insects move slowly and warm ones move fast and erratically.
 
-## 6. Detection pipeline
+## Detection pipeline
 
 The same code is in `trail_server.py` (recordings) and `trail_live_server.py` (live).
 
@@ -87,11 +88,11 @@ All of these settings are adjustable in the browser, along with the accumulation
 
 ### Frame camera and glyph scripts
 
-- `basler.py` records video from a Basler GigE camera using Pylon. It uses a 1024x768 region of interest in the middle of the 2448x2048 sensor, a 60 fps target, and a 2000 µs exposure to freeze fast motion. It buffers frames in RAM and writes an MP4 afterwards. The notes in the code give the GigE limit at about 115 MB/s, which allows roughly 116 fps at that region size. It is a different camera from the DART module in section 3, which is a MIPI part. TODO confirm which Basler camera this was run on.
+- `basler.py` records video from a Basler GigE camera using Pylon. It uses a 1024x768 region of interest in the middle of the 2448x2048 sensor, a 60 fps target, and a 2000 µs exposure to freeze fast motion. It buffers frames in RAM and writes an MP4 afterwards. The notes in the code give the GigE limit at about 115 MB/s, which allows roughly 116 fps at that region size. It is a different camera from the DART module in "Hardware and software", which is a MIPI part. TODO confirm which Basler camera this was run on.
 - `motion_glyphs.py` takes an MP4, differences consecutive frames and accumulates the result with a decay of 0.90 per frame. Every 20 frames it saves a heat-map image where brighter pixels mean more recent or faster motion. Frame differencing starts from a blur and a change threshold of 8 levels.
 - These give a way to compare event-camera detection with an ordinary high-speed video of the same movement. TODO say whether that comparison was done.
 
-## 7. Known issues from the readme
+## Known issues from the readme
 
 Detection and tracking:
 
@@ -110,7 +111,7 @@ Lighting and sensor:
 - Hot pixels. Some pixels fire constantly and show up as one-pixel tracks. They can be masked by position.
 - Vignetting. The event rate falls towards the frame edges, so objects there may fall below the threshold.
 
-## 8. Results
+## Results
 
 TODO. Nothing in the repo records results. Useful things to add:
 
@@ -121,7 +122,7 @@ TODO. Nothing in the repo records results. Useful things to add:
 - Recording samples and trail screenshots.
 - Power draw of the Pi and camera in use.
 
-## 9. Planned improvements
+## Planned improvements
 
 From the readme.
 
@@ -135,7 +136,7 @@ From the readme.
 - Visualisation. Speed-coloured trails, longer persistent trails, an activity heat map, and auto-recording when a track is confirmed.
 - Code. Move the duplicated tracker and blob detection into a shared module, and replace query-string defaults with a config file.
 
-## 10. Open questions
+## Open questions
 
 - Does it work outside the lab, in sunlight and wind, where shadows and moving leaves create events? TODO
 - Can it run on battery or solar? Power draw of a Pi 5 is far above the ESP32 setups. TODO
