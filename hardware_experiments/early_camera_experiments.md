@@ -1,25 +1,27 @@
 # Early camera-only detection experiments (2020)
 
-Status: first draft built from the source code. Items marked TODO need results, photos or context from whoever ran the tests.
+**Status:** Finished. Dropped in August 2020 because brightness averaging missed small insects, shadows triggered it and it used too much power. Draft built from the source code, so items marked TODO need results, photos or context from whoever ran the tests.
+**Period:** January to August 2020
+**Source:** Private Bitbucket repo `playstate_africa/camera-detection`, 12 commits. Branches are `master`, `develop` and `render-cells`. `render-cells` has the cell-based `main.cpp` but not the headers and MQTT files it includes, so it can't build on its own. Two "added dev branch" commits on 5 Aug 2020 add those files to `develop`, which makes it the complete version of the cell approach.
+**Also:** A second Bitbucket repo, `mqqtDetection` (one commit, 6 Aug 2020), holds only the MQTT helper and a sketch that publishes "hello" once a second. It is a connection test for the debugging stream described below.
+**Related:** These experiments came before [max30102.md](max30102.md).
 
-Source: private Bitbucket repo `playstate_africa/camera-detection`, 12 commits between 25 Jan and 5 Aug 2020. Branches are `master`, `develop` and `render-cells`. `render-cells` has the cell-based `main.cpp` but not the headers and MQTT files it includes, so it can't build on its own. Two "added dev branch" commits on 5 Aug 2020 add those files to `develop`, which makes it the complete version of the cell approach.
+---
 
-These experiments came before the MAX30102 work. See [max30102.md](max30102.md) for what came after.
-
-## 1. Summary
+## Summary
 
 - Goal. Detect an insect entering the camera's view using only the ESP32-CAM, with no extra sensor.
 - Approach. Compare brightness between frames, first in rings around the frame edge, then in a grid of cells.
 - Outcome. Averaging brightness could not reliably detect small insects, shadows set it off, and running the camera constantly used too much power. The detection code never got past a prototype. The first version prints INCOMING or OUTGOING to the serial port. The second streams raw cell values to a computer for debugging and has no working detector.
 - What came next. A separate IR sensor, the MAX30102, in late 2021.
 
-## 2. Goal and idea
+## Goal and idea
 
 - We wanted to photograph insects without recording constantly.
 - The idea was that an insect entering the frame changes brightness near the edge first, then further in. Watching rings from the outside inward would show both that something arrived and which way it moved.
 - Detection had to run on the ESP32, which has little processing power and memory, so the method had to be simple.
 
-## 3. Hardware and tooling
+## Hardware and tooling
 
 - ESP32-CAM, AI Thinker pinout.
 - Camera in grayscale mode, so each pixel is one brightness byte from 0 to 255.
@@ -27,7 +29,7 @@ These experiments came before the MAX30102 work. See [max30102.md](max30102.md) 
 - PlatformIO with the Arduino framework. A Travis CI template is in the repo but nothing in it is enabled.
 - TODO lens, enclosure, test setup, and what we pointed it at (live insects, printed targets, hand movement).
 
-## 4. Version 1, edge bands (25 to 27 Jan 2020, `master`)
+## Version 1, edge bands (25 to 27 Jan 2020, `master`)
 
 How it works:
 
@@ -45,7 +47,7 @@ Notes:
 - Commit messages trace the work. "band detection" and "not Working" on 25 Jan, "rendering bands" and "low res results" on 26 Jan, "rendering and double threshold" and "bands working" on 27 Jan, ending with "tweaking settings".
 - The code prints band averages and previous values to the serial port for each detection, so it was tuned by reading logs. TODO any recordings or notes from those tests.
 
-## 5. Version 2, cells and off-device analysis (28 Jan to 5 Aug 2020, `develop`)
+## Version 2, cells and off-device analysis (28 Jan to 5 Aug 2020, `develop`)
 
 What changed:
 
@@ -63,12 +65,12 @@ Planned but not finished:
 
 The MQTT stream was a debugging tool. It sent the cell values to a computer so we could visualise what the detector was seeing, instead of tuning it blind on the device. The branch name `render-cells` matches this. The receiving and visualisation code is not in this repo. TODO say where it lived, if it still exists.
 
-## 6. Time-lapse sketch (`scratch/SDTimeLapse.cpp`)
+## Time-lapse sketch (`scratch/SDTimeLapse.cpp`)
 
 - A separate sketch that captures a photo at a fixed interval (set to 5000) and saves it to the SD card, with timestamps from NTP.
 - Likely a way to collect real footage to test detection against, or a baseline "record everything" approach. TODO confirm.
 
-## 7. Results
+## Results
 
 Nothing in the repo records the results, but the team's conclusion was clear.
 
@@ -83,7 +85,7 @@ TODO add numbers and evidence if we have them.
 - Frame rate and power draw.
 - Example frames or logs.
 
-## 8. Why we moved on
+## Why we moved on
 
 Three problems, none of them fixable by tuning the threshold.
 
@@ -95,7 +97,7 @@ A separate trigger that reads infrared reflection avoids all three. It responds 
 
 The commits stop in August 2020 and don't mention any of this, so it comes from the team rather than the code.
 
-## 9. What carried forward
+## What carried forward
 
 A later camera-based attempt, with an event camera on a Raspberry Pi 5 in 2026, is in [event_camera_tests.md](event_camera_tests.md). It still has to deal with shadows.
 
@@ -103,6 +105,6 @@ A later camera-based attempt, with an event camera on a Raspberry Pi 5 in 2026, 
 - The idea of a separate, cheap trigger in front of a camera that stays off until needed. The MAX30102 firmware that followed in 2021 is built around it.
 - The `spaia/flash` flash control and the SD card logging in the time-lapse sketch show up again in later firmware as flash handling and an SD card event log. TODO confirm the lineage.
 
-## 10. Notes on the repo
+## Notes on the repo
 
 - The repo contains hard-coded Wi-Fi and MQTT credentials in the `develop` branch (`scratch/SDTimeLapse.cpp` and the MQTT header). If this repo is ever shared or published, rotate those first.

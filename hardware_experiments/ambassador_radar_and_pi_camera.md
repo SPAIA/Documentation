@@ -1,8 +1,13 @@
 # Ambassador, Raspberry Pi radar and camera trigger tests (2024 to 2025)
 
-Status: first draft built from the source code. The repo has no notes or results, so anything about how well it worked is marked TODO.
+**Status:** Finished. The radar was abandoned because of environmental noise, the time-of-flight sensor was too coarse for small insects, and camera motion detection was the approach left running. Draft built from the source code, so items marked TODO need results or context from whoever ran the tests.
+**Period:** April 2024 to July 2025
+**Source:** https://github.com/SPAIA/ambassador (private)
+**Related:** [Fraunhofer IZM radar feasibility study](../radar-feasibility-2025/README.md), which followed the radar tests here.
 
-Source: https://github.com/SPAIA/ambassador (private). Branches and dates:
+---
+
+Branches and dates:
 
 | Branch | Dates | What it holds |
 |---|---|---|
@@ -15,17 +20,17 @@ The `threads` branch is the most complete, so the descriptions below follow it u
 
 This sits between [max30102.md](max30102.md) (ESP32 with an IR proximity trigger, 2021 to 2023) and [event_camera_tests.md](event_camera_tests.md) (event camera, 2026).
 
-## 1. Summary
+## Summary
 
 - Goal. Photograph insects with a Raspberry Pi and a good camera, using a cheap sensor or image analysis to decide when to take a photo.
 - Three trigger ideas were tried in turn.
-  1. A 60 GHz radar presence detector (Acconeer A111).
+  1. A 60 GHz radar presence detector (Acconeer A111). Environmental noise swamped it and we abandoned it.
   2. Frame differencing on a low-resolution camera stream.
   3. An 8x8 time-of-flight distance sensor (ST VL53L7CX). Its resolution was too coarse for smaller insects.
 - The code ends up on the camera approach. The radar listener is switched off in the latest `main.py`, and the time-of-flight work is a driver port with a single test program.
 - Results. TODO. Nothing in the repo records how any of them performed.
 
-## 2. Hardware
+## Hardware
 
 - Raspberry Pi, a 32-bit ARM target (`armv7l`). TODO model.
 - Pi camera, driven with `picamera2`. The code mentions both the Pi HQ camera and Camera Module 3. It captures 2304x1296 stills (the Module 3 binned mode) and uses a 640x480 stream for detection. TODO which camera the field units used.
@@ -34,13 +39,13 @@ This sits between [max30102.md](max30102.md) (ESP32 with an IR proximity trigger
 - ST VL53L7CX multizone time-of-flight sensor, in the experiments only.
 - Power saving in the setup script. It turns off HDMI, Bluetooth, the Ethernet interface, Avahi and the status LEDs, and enables I2C and SPI. This suggests battery or solar use was planned. TODO confirm, and add measured power draw.
 
-## 3. Stage 1, timed logger (`main` branch)
+## Stage 1, timed logger (`main` branch)
 
 - Every 10 seconds the Pi takes a 1280x720 photo and reads temperature and humidity from the BME280.
 - It appends a row to `data.csv`, uploads the CSV to the SPAIA API (`/field/events`) and the image to `/media`, then deletes both local files.
 - There is no detection. It is a baseline that proves the capture, sensor and upload path. The ESP32 firmware uses the same two endpoints and the same CSV idea, so both device types feed the same backend.
 
-## 4. Stage 2, radar trigger (`develop` branch)
+## Stage 2, radar trigger (`develop` branch)
 
 How it works:
 
@@ -64,9 +69,10 @@ Radar settings, first version against latest:
 - The range shrank from 1.4 m to the first 0.8 m, which suggests the radar was most useful for things very close to it. TODO confirm.
 - A code comment wonders whether to trigger on a presence score above 1100 instead of on distance. TODO say which one was used in the field.
 - There's a test hook that fires the trigger at random about 30% of the time, commented out, for checking the socket.
-- The radar sees movement in front of the sensor, not insects as such. TODO say what it reacted to in practice (insects, leaves, people, wind).
+- Result. The radar picked up a large amount of environmental noise, which made it unusable as a trigger, and we abandoned these attempts. It detects movement in front of the sensor, not insects as such, so anything moving in range set it off. TODO say what the main noise sources were (leaves, wind, people, other radio sources) and how often it fired.
+- This led to the 2025 study with Fraunhofer IZM, which tested a better radar under controlled conditions. See "What came next" below.
 
-## 5. Stage 3, camera motion detection (`image-detection` and `threads`)
+## Stage 3, camera motion detection (`image-detection` and `threads`)
 
 Added on 20 Apr 2024 ("basic motion detection in place") and refined in `threads`.
 
@@ -89,7 +95,7 @@ Other details:
 - `logger/motion.py` is a bare-bones test of the same algorithm that prints "bug" on detection.
 - `requirements.txt` lists `ultralytics` and `supervision`, which are YOLO and detection tooling, but no code uses them. TODO say whether image classification was tried.
 
-## 6. Stage 4, time-of-flight sensor experiments (`threads` branch, May 2024 and 2025)
+## Stage 4, time-of-flight sensor experiments (`threads` branch, May 2024 and 2025)
 
 - Goal. Use an ST VL53L7CX, which measures distance in an 8x8 grid of zones, to detect something moving in front of the camera. A change in distance in one zone would mean movement.
 - Work done. The official ST Linux driver for the sensor is in `experiments/`, in both kernel-module and user-mode forms, with a device tree overlay and the sample programs.
@@ -99,23 +105,37 @@ Other details:
 - The experiments folder starts with commits on 9 May 2024. The commits on 27 Jul 2025 add the VL53L7CX driver files and the test program, and remove a Python virtual environment that had been committed to the branch.
 - Result. The resolution wasn't fine enough to detect smaller insects. The sensor splits its field of view into 64 zones, so each zone covers a wide patch of the scene, and a small insect moving within a zone barely changes that zone's single distance reading. TODO add the smallest insect it did detect, and the distance it was tested at.
 
-## 7. Results
+## Results
 
 TODO. Please add whatever you remember or have saved.
 
-- Detection range of the radar for insects, and what size and type of insect set it off.
+- Radar. Environmental noise made it unusable and we abandoned it (see "Stage 2, radar trigger"). TODO add the detection range and the smallest insect it ever picked out of the noise.
 - False triggers from each method (leaves, wind, shadows, people).
 - Time from trigger to photo. The camera mode switch in stage 3 adds delay. TODO numbers.
 - Photo quality and focus at the working distance.
 - Power draw and run time.
-- Smallest insect the time-of-flight sensor could see. It missed smaller insects because of its coarse 8x8 resolution (see section 6).
+- Smallest insect the time-of-flight sensor could see. It missed smaller insects because of its coarse 8x8 resolution (see "Stage 4, time-of-flight sensor experiments").
 
-## 8. Observations from the code
+## Observations from the code
 
 - Triggering from the radar and from the camera ended up as two separate programs joined by a socket. The latest `main.py` has the radar listener commented out, so camera detection is the one that runs.
 - Stage 3 trades power for flexibility. Streaming 640x480 and processing every frame keeps the Pi busy, which was the problem the 2020 ESP32 camera tests ran into. TODO confirm this was a concern here.
 - Each capture switches the camera between two modes, which stops and restarts it. This probably costs the first moments of an insect visit. TODO measure.
 
-## 9. Housekeeping
+## What came next
+
+After the radar noise problems, we ran a feasibility study with Fraunhofer IZM, completed in March 2025. Full write-up in [radar-feasibility-2025](../radar-feasibility-2025/README.md).
+
+| | Ambassador radar (2024) | Fraunhofer IZM study (2025) |
+|---|---|---|
+| Radar | Acconeer A111, 60 GHz, presence detector | IZM's own 60 GHz FMCW MIMO module |
+| Setting | Real environment | RF anechoic chamber |
+| Target | Whatever was in front of the sensor | 20 mm and 30 mm water-filled insect phantoms on a rotating arm |
+| Outcome | Unusable, environmental noise | Both phantoms clearly detected |
+
+- The chamber removes the noise that sank the field tests, so the two results don't contradict each other. The study's own open questions say it did not cover wind, vegetation clutter or multipath outdoors, which are the conditions that caused our problems.
+- Radar is now parked as a later-phase sensor. The main track is the camera rig, see [event_camera_tests.md](event_camera_tests.md).
+
+## Housekeeping
 
 - The `main` branch has a `logger/.env` file with an API token committed. The `threads` branch replaces it with `.env.example`, but the token is still in history. Rotate it before sharing the repo.
