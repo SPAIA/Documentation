@@ -32,12 +32,12 @@ This sits between [max30102.md](max30102.md) (ESP32 with an IR proximity trigger
 
 ## Hardware
 
-- Raspberry Pi, a 32-bit ARM target (`armv7l`). TODO model.
-- Pi camera, driven with `picamera2`. The code mentions both the Pi HQ camera and Camera Module 3. It captures 2304x1296 stills (the Module 3 binned mode) and uses a 640x480 stream for detection. TODO which camera the field units used.
+- Raspberry Pi 4, a 32-bit ARM target (`armv7l`) in the build.
+- Pi camera, driven with `picamera2`. The code mentions both the Pi HQ camera and Camera Module 3. It captures 2304x1296 stills (the Module 3 binned mode) and uses a 640x480 stream for detection. The 2024 Haus Strobl field unit used the Pi HQ camera. See [field_deployment_2024](../field_deployment_2024/README.md).
 - Acconeer A111 radar on a SparkFun breakout, talking over SPI with GPIO through `libgpiod`. The board support file is `acc_board_rpi_sparkfun.c`.
 - SparkFun Qwiic BME280 for temperature and humidity.
 - ST VL53L7CX multizone time-of-flight sensor, in the experiments only.
-- Power saving in the setup script. It turns off HDMI, Bluetooth, the Ethernet interface, Avahi and the status LEDs, and enables I2C and SPI. This suggests battery or solar use was planned. TODO confirm, and add measured power draw.
+- Power saving in the setup script. It turns off HDMI, Bluetooth, the Ethernet interface, Avahi and the status LEDs, and enables I2C and SPI. This suggests battery or solar use was planned. The 2024 Haus Strobl field unit ran from mains power. TODO add measured power draw.
 
 ## Stage 1, timed logger (`main` branch)
 

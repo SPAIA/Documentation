@@ -16,6 +16,8 @@ SPAIA is trying to detect and count small insects cheaply and with little power,
 |---|---|---|
 | [hardware_experiments](hardware_experiments/README.md) | Every sensor and method tried to detect insects and trigger a photo, with the outcome of each | [README.md](hardware_experiments/README.md) |
 | [platform_experiments](platform_experiments/README.md) | Hosting and database architectures, user interfaces, and how device data is labelled, verified and enriched | [README.md](platform_experiments/README.md) |
+| [field_deployment_2024](field_deployment_2024/README.md) | The 2024 Ambassador camera-trap season: four devices, 136,133 events, and the Haus Strobl summer run at Walenstadt | [README.md](field_deployment_2024/README.md) |
+| [citizen_science_2026](citizen_science_2026/kraft_pit_vs_pankow_flower_bed.md) | Bugmeister hand counts from autumn 2026, comparing an unmanaged patch with an ornamental flower bed | [kraft_pit_vs_pankow_flower_bed.md](citizen_science_2026/kraft_pit_vs_pankow_flower_bed.md) |
 | [radar-feasibility-2025](radar-feasibility-2025/README.md) | The 60 GHz radar feasibility study with Fraunhofer IZM, funded through IBB Transfer BONUS | [README.md](radar-feasibility-2025/README.md) |
 
 ## Reading order

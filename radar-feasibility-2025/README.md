@@ -1,6 +1,6 @@
 # 60 GHz Radar Feasibility Study with Fraunhofer IZM (2025)
 
-**Status:** Completed March 2025. Radar is parked as a later-phase sensor, not part of the current reference rig.
+**Status:** Completed March 2025. A go/no-go test, and the result was go. Radar now needs further study and is a later-phase sensor, not part of the current reference rig.
 **Partner:** Fraunhofer IZM, Department RF & Smart Sensor Systems (R3S), Group Radar Frontends & Modules (RFM)
 **IZM contacts:** Dr.-Ing. Christian Tschoban (group manager), Raschid Younes (radar measurements)
 **Funding:** IBB Transfer BONUS (Berlin), applied for and reported by Playstate UG
@@ -9,6 +9,8 @@
 ---
 
 ## Summary
+
+The study was a go/no-go test of one question: can a 60 GHz radar detect a target as small and fast as an insect at all? It can, so radar stays in the plan. Turning that into a working sensor needs further study.
 
 SPAIA and Fraunhofer IZM ran a feasibility study on detecting insects with low-cost sensors. The main candidate was short-range radar. IZM built a measurement rig in an anechoic chamber and spun 3D-printed insect phantoms in front of the sensors. IZM's own **60 GHz FMCW MIMO radar module** clearly detected phantoms 20 mm and 30 mm long. The study ended with a concept for a compact camera + radar sensor node.
 
@@ -47,6 +49,16 @@ The original framing was detecting **invasive insect species**. The October 2025
 ![Insect phantom](images/insect-phantom.png)
 
 The phantoms were 3D-printed, insect-shaped bodies **20 mm and 30 mm long**, filled with water to roughly match the dielectric properties of an insect body.
+
+| | |
+|---|---|
+| ![Insect phantom next to a ruler, top view](images/phantom-ruler-top.jpg) | ![Insect phantom next to a ruler, showing the open end](images/phantom-ruler-angle.jpg) |
+
+*A phantom next to a ruler. It measures about 28 mm, so this is most likely the 30 mm phantom. The open end is where it is filled, and the twisted wire is what it hangs from.*
+
+![Desk version of the rotating-arm rig](images/rotating-arm-rig.jpg)
+
+*A desk version of the rotating arm. A small stepper motor (it looks like a 28BYJ-48 with a ULN2003 driver board) is driven by a microcontroller board and turns a 3D-printed arm. The holes along the arm let the phantom hang at different distances from the axis, which changes its speed and how far it swings. TODO: say who built this rig and whether it was used for the chamber measurements or only for bench tests.*
 
 ## Results
 
@@ -87,8 +99,17 @@ IZM sketched a first integrated node of about **150 × 150 × 50 mm**:
 | Apr 2025 | Second radar video from Raschid Younes |
 | Oct 2025 | Sensor-selection follow-up with IZM, aimed at Asian hornet detection: radar (body size, velocity, wingbeat), Basler acA720-520uc high-frame-rate camera, Prophesee GenX320 event camera. ToF was later ruled out. |
 | Feb–Mar 2026 | Camera measurements at IZM with the Basler and GenX320 (IZM radar again listed as "one of our own") |
+| After Mar 2025 | Further radar tests with IZM set up a more systematic method: record clean readings in a controlled environment first, then use them to pick out the insect motion signature in noisy field data. Not yet tried in the field. TODO: dates. |
 
 ## Where radar sits now
+
+Later radar tests with IZM made the approach more systematic:
+
+1. Record clean readings of insect phantoms in a controlled environment, where the only thing moving is the target.
+2. Use those readings to define what an insect's motion signature looks like.
+3. Analyse field data against that signature to pull insect motion out of the noise.
+
+The 2024 Ambassador radar trigger failed because it went straight into the field, where outdoor noise swamped it (see [ambassador_radar_and_pi_camera.md](../hardware_experiments/ambassador_radar_and_pi_camera.md)). The new method has not been tried in the field yet, so whether the signature survives wind, vegetation and multipath is still the open question.
 
 The main track is now the camera-based reference rig: Raspberry Pi 5, Basler global-shutter camera, and the GenX320 as a secondary feed. That work is documented in [`SPAIA/sensor_tests`](https://github.com/SPAIA/sensor_tests). Radar is parked as a later-phase sensor. The strongest candidate uses are:
 
